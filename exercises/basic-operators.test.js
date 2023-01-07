@@ -1,4 +1,4 @@
-import { from, of } from 'rxjs';
+import {from, of, skipWhile, tap} from 'rxjs';
 import {
   take,
   skip,
@@ -30,8 +30,11 @@ const getResult = async (observable) => {
 };
 
 describe('Basic Operators', () => {
-  it.skip('should take the first 5 values and map them to the word "DINOSAUR"', async () => {
-    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe();
+  it('should take the first 5 values and map them to the word "DINOSAUR"', async () => {
+    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe(
+      take(5),
+      mapTo('DINOSAUR')
+    );
 
     return expect(await getResult(observable$)).toEqual([
       'DINOSAUR',
@@ -42,31 +45,43 @@ describe('Basic Operators', () => {
     ]);
   });
 
-  it.skip('should skip the first 5 values and double last two', async () => {
-    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe();
+  it('should skip the first 5 values and double last two', async () => {
+    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe(
+      skipWhile(result => result < 6),
+      map(elemnt=> elemnt*2)
+    );
 
     return expect(await getResult(observable$)).toEqual([12, 14]);
   });
 
-  it.skip('should emit the square of every even number in the stream', async () => {
-    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe();
+  it('should emit the square of every even number in the stream', async () => {
+    const observable$ = of(1, 2, 3, 4, 5, 6, 7).pipe(
+      filter(e=> e % 2 === 0),
+      tap(console.log),
+      map(e => e * e)
+    );
 
     return expect(await getResult(observable$)).toEqual([4, 16, 36]);
   });
 
-  it.skip('should sum of the total of all of the Fibonacci numbers under 200', async () => {
-    const observable$ = from(fibonacci()).pipe();
+  it('should sum of the total of all of the Fibonacci numbers under 200', async () => {
+    const observable$ = from(fibonacci()).pipe(
+      takeWhile((e )=> e < 200),
+      reduce((acc,value)=> acc+=value,0)
+    );
 
     expect(await getResult(observable$)).toEqual([376]);
   });
 
-  it.skip('should merge each object emited into a single object, emitting each state along the way', async () => {
+  it('should merge each object emitted into a single object, emitting each state along the way', async () => {
     const observable$ = of(
       { isRunning: true },
       { currentSpeed: 100 },
       { currentSpeed: 200 },
       { distance: 500 },
-    ).pipe();
+    ).pipe(
+      scan((acct,v)=> acc ={...acc,...v},{})
+    );
 
     expect(await getResult(observable$)).toEqual([
       { isRunning: true },
