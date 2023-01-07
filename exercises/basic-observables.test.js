@@ -11,7 +11,7 @@ describe('Basic Observables', () => {
   });
 
   describe(from, () => {
-    it.skip('should create an observable', () => {
+    it('should create an observable', () => {
       const result = [];
       const myObservable$ = from([1, 2, 3, 4]);
       myObservable$.subscribe(value=> result.push(value))
