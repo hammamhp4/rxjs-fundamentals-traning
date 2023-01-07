@@ -2,6 +2,7 @@ import { fromEvent } from 'rxjs';
 
 const button = document.getElementById('create-notification');
 const notificationMessages = document.getElementById('notification-messages');
+const buttonClicks$ = fromEvent(button, 'click');
 
 const createNotificationElement = () => {
   const element = document.createElement('article');
@@ -13,6 +14,7 @@ const addMessageToDOM = () => {
   const notification = createNotificationElement();
   notificationMessages.appendChild(notification);
 };
+buttonClicks$.subscribe(addMessageToDOM);
 
 /**
  * Your mission:
