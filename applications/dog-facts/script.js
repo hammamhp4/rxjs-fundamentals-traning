@@ -9,37 +9,41 @@ import {
   startWith,
   switchMap,
   tap,
-  pluck,
 } from 'rxjs/operators';
 
-import {
-  fetchButton,
-  stopButton,
-  clearError,
-  clearFacts,
-  addFacts,
-  setError,
-} from './utilities';
+import {addFacts, clearError, clearFacts, fetchButton, stopButton,} from './utilities';
 
-const endpoint = 'http://localhost:3333/api/facts?delay=2000&chaos=true&flakiness=1';
+const endpoint = 'http://localhost:3333/api/facts';
 
-const fetchEvent$ = fromEvent(fetchButton, 'click').pipe(
-  exhaustMap(() => {
-    return fromFetch(endpoint).pipe(
-      tap(clearError),
-      mergeMap((response) => {
-        if (response.ok) {
-          return response.json();
-        }else{
-          throw new Error('Something went wrong')
-        }
-      }),
-      retry(4),
-      catchError((error)=>{
-        return of({error: error.message})
-      })
-    )
+const fetchData = () => fromFetch(endpoint).pipe(
+  tap(clearError),
+  mergeMap((response) => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Something went wrong')
+    }
+  }),
+  retry(4),
+  catchError((error) => {
+    return of({error: error.message})
   })
-);
+)
 
-fetchEvent$.subscribe(addFacts);
+const fetch$ = fromEvent(fetchButton, 'click').pipe(mapTo(true));
+const stop$ = fromEvent(stopButton, 'click').pipe(mapTo(false));
+const fetchStream$ = merge(fetch$, stop$).pipe(
+  startWith(false),
+  switchMap(isFetching => {
+    if (isFetching) {
+      return timer(0, 5000).pipe(
+        tap(() => clearError()),
+        tap(() => clearFacts()),
+        exhaustMap(fetchData)
+      )
+    } else {
+      return NEVER;
+    }
+  })
+)
+fetchStream$.subscribe(addFacts);
