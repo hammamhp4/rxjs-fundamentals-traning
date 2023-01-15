@@ -21,11 +21,24 @@ import {
   setError,
 } from './utilities';
 
-const endpoint = 'http://localhost:3333/api/facts';
+const endpoint = 'http://localhost:3333/api/facts?delay=2000&chaos=true&flakiness=1';
 
 const fetchEvent$ = fromEvent(fetchButton, 'click').pipe(
-  mergeMap(() => {
-  return fromFetch(endpoint).pipe(mergeMap((response)=> response.json()))
+  exhaustMap(() => {
+    return fromFetch(endpoint).pipe(
+      tap(clearError),
+      mergeMap((response) => {
+        if (response.ok) {
+          return response.json();
+        }else{
+          throw new Error('Something went wrong')
+        }
+      }),
+      retry(4),
+      catchError((error)=>{
+        return of({error: error.message})
+      })
+    )
   })
 );
 
