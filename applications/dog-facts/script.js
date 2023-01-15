@@ -22,3 +22,11 @@ import {
 } from './utilities';
 
 const endpoint = 'http://localhost:3333/api/facts';
+
+const fetchEvent$ = fromEvent(fetchButton, 'click').pipe(
+  mergeMap(() => {
+  return fromFetch(endpoint).pipe(mergeMap((response)=> response.json()))
+  })
+);
+
+fetchEvent$.subscribe(addFacts);
